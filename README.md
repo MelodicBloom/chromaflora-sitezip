@@ -8,6 +8,8 @@ A cosmic bioluminescent creative platform and generative art suite — built ent
 
 🔴 **[Live Demo](https://replit.com/@qt314wink/chromaflora-sitezip)** — runs in browser, no install required.
 
+🟣 **[Mandala Engine](https://chromaflora.replit.app/mandala.html)** — direct link to the real-time mandala generator.
+
 ---
 
 ## What It Is
