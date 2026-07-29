@@ -1,0 +1,50 @@
+version: "1.0.0"
+engine:
+  mode: cpu-worker
+  rings: 12
+  steps: 720
+  complexity: 1.0
+  seed: 1337
+  formula: polar
+  symmetry: 8
+  layers: 4
+  radius: 85
+  freq: 3
+  amp: 40
+  phase: 0
+  harm: 0
+  mirror: true
+  golden: false
+  noiseAmp: 0
+  noiseScale: 0.02
+  noiseOctaves: 3
+render:
+  dprMode: auto
+  maxDprMobile: 2
+  maxDprDesktop: 2.5
+  touchAction: none
+  safeAreaInsets: true
+  targetFps: 60
+  adaptiveQuality: true
+style:
+  colorMode: palette
+  color: "#a855f7"
+  palette: ["#a855f7", "#22d3d8", "#ec4899", "#f97316", "#10b981"]
+  opacity: 0.8
+  lineWeight: 1.2
+  glow: true
+  glowAmt: 0.5
+  bg: void
+animation:
+  enabled: false
+  spin: 0
+  pulse: 0
+  noiseAnim: false
+  trail: false
+worker:
+  enabled: true
+  transferable: true
+  batchSize: 8192
+  maxStepsPerDispatch: 180
+glsl: {}
+three: {}
