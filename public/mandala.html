@@ -125,6 +125,7 @@ canvas{position:absolute;top:0;left:0;display:block;touch-action:none}
   50%{opacity:1;box-shadow:0 0 28px rgba(168,85,247,.8),0 0 56px rgba(168,85,247,.3)}
 }
 </style>
+<link rel="stylesheet" href="mandala.mobile.patch.css">
 </head>
 <body>
 
@@ -406,7 +407,7 @@ const gCtx=gc.getContext('2d');
 let W,H;
 
 function sizeCanvas(){
-  const dpr=window.devicePixelRatio||1;
+  const mobilePolicy=window.__cfMobilePolicy; const dpr=mobilePolicy?.dpr || (window.devicePixelRatio||1);
   W=wrap.clientWidth; H=wrap.clientHeight;
   mc.width=Math.round(W*dpr); mc.height=Math.round(H*dpr);
   gc.width=Math.round(W*dpr); gc.height=Math.round(H*dpr);
@@ -960,6 +961,7 @@ try{
 }catch(e){mandalaWorker=null;}
 
 
+<script src="mandala.mobile.patch.js"></script>
 /* ── Init ── */
 document.querySelectorAll('input[type=range]').forEach(updateBg);
 updateHUD();

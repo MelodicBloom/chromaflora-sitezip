@@ -1,0 +1,13 @@
+@media (max-width: 980px) {
+  .cf-header { padding: 0 10px; height: 52px; }
+  .cf-nav { display: none; }
+  .studio { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+  .sidebar, .panel { max-height: 30vh; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .canvas-wrap { min-height: 40vh; }
+  .cf-btn { min-height: 44px; }
+  .cf-swatch { width: 28px; height: 28px; }
+}
+@media (max-width: 560px) {
+  .canvas-hud { bottom: 8px; gap: 4px; }
+  .hud-tag { font-size: 9px; padding: 3px 8px; }
+}
