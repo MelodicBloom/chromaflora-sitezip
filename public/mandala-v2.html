@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#070611">
+<title>Mandala Studio V2 — ChromaFlora</title>
+<meta name="description" content="A mobile-first tactile mandala generator with live geometry, motion, color, rewards, haptics, and PNG export.">
+<style>
+:root{
+  --void:#070611;
+  --void-2:#0d0a1a;
+  --panel:#12101f;
+  --panel-2:#18142b;
+  --line:rgba(255,255,255,.11);
+  --line-hot:rgba(216,98,255,.62);
+  --text:#f8f6ff;
+  --muted:#aaa4bd;
+  --iris:#a855f7;
+  --bloom:#ec4899;
+  --aqua:#22d3d8;
+  --gold:#fbbf24;
+  --good:#34d399;
+  --danger:#fb7185;
+  --radius:20px;
+  --spring:cubic-bezier(.2,.9,.25,1.35);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html{background:var(--void);scroll-behavior:smooth}
+body{
+  margin:0;
+  min-height:100dvh;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 15% -10%,rgba(236,72,153,.16),transparent 34%),
+    radial-gradient(circle at 95% 10%,rgba(34,211,216,.12),transparent 32%),
+    var(--void);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior-y:none;
+}
+button,input{font:inherit}
+button{color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);outline-offset:3px}
+
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:80;
+  min-height:64px;
+  padding:calc(8px + var(--safe-top)) 12px 8px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:rgba(7,6,17,.88);
+  backdrop-filter:blur(18px) saturate(1.25);
+  border-bottom:1px solid var(--line);
+}
+.brand{
+  min-width:0;
+  flex:1;
+  color:inherit;
+  text-decoration:none;
+  font-size:clamp(20px,5vw,28px);
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.055em;
+  background:linear-gradient(115deg,#ff62b2 0%,#b564ff 48%,#40e8e5 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.top-actions{display:flex;gap:8px}
+.icon-btn{
+  width:50px;
+  height:50px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.025));
+  box-shadow:inset 0 1px rgba(255,255,255,.12),0 8px 22px rgba(0,0,0,.25);
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  font-size:20px;
+  transition:transform .16s var(--spring),border-color .16s,box-shadow .16s;
+  touch-action:manipulation;
+}
+.icon-btn.primary{
+  border-color:rgba(236,72,153,.58);
+  background:linear-gradient(145deg,#ae52ff,#ec4899);
+  box-shadow:inset 0 1px rgba(255,255,255,.25),0 9px 28px rgba(236,72,153,.28);
+}
+.icon-btn:active,.tactile:active{transform:translateY(3px) scale(.97);box-shadow:inset 0 4px 10px rgba(0,0,0,.35)}
+
+.app{width:min(100%,1180px);margin:0 auto;padding:10px 10px calc(104px + var(--safe-bottom))}
+
+.stage-card{
+  position:relative;
+  height:clamp(370px,49svh,570px);
+  min-height:370px;
+  overflow:hidden;
+  border-radius:28px;
+  border:1px solid rgba(168,85,247,.34);
+  background:
+    radial-gradient(circle at 50% 44%,rgba(168,85,247,.12),transparent 45%),
+    #030209;
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.08),
+    inset 0 -24px 70px rgba(0,0,0,.32),
+    0 24px 58px rgba(0,0,0,.36),
+    0 0 0 1px rgba(34,211,216,.045);
+  isolation:isolate;
+}
+.stage-card::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  z-index:-1;
+  border-radius:inherit;
+  background:conic-gradient(from var(--spin,0deg),rgba(236,72,153,.2),rgba(168,85,247,.02),rgba(34,211,216,.2),rgba(168,85,247,.02),rgba(236,72,153,.2));
+  filter:blur(18px);
+  opacity:.48;
+}
+.stage-card canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.stage-glass{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 22%,transparent 72%,rgba(0,0,0,.22));
+}
+.stage-top{
+  position:absolute;
+  z-index:3;
+  top:12px;
+  left:12px;
+  right:12px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  pointer-events:none;
+}
+.mode-pill,.score-cluster{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(8,6,18,.68);
+  backdrop-filter:blur(14px);
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.24);
+}
+.mode-pill{
+  min-height:44px;
+  border-radius:16px;
+  padding:8px 12px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.mode-pill strong{font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.mode-pill span{font-size:10px;color:var(--muted);margin-top:2px}
+.score-cluster{
+  min-width:130px;
+  border-radius:18px;
+  padding:8px 10px;
+}
+.score-line{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800}
+.score-line b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#f5c6ff}
+.xp-track{height:7px;margin-top:7px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.xp-fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--aqua),var(--iris),var(--bloom));box-shadow:0 0 12px rgba(168,85,247,.55);transition:width .3s var(--spring)}
+
+.center-reticle{
+  position:absolute;
+  z-index:2;
+  left:50%;top:50%;
+  width:min(72vw,340px);
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.035);
+  box-shadow:0 0 65px rgba(168,85,247,.08),inset 0 0 40px rgba(34,211,216,.03);
+  pointer-events:none;
+}
+.center-reticle::before,.center-reticle::after{content:"";position:absolute;inset:14%;border-radius:50%;border:1px dashed rgba(255,255,255,.035)}
+.center-reticle::after{inset:38%;border-style:solid}
+
+.stage-bottom{
+  position:absolute;
+  z-index:4;
+  left:10px;right:10px;bottom:10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.hud-row{display:flex;gap:6px;min-width:0;overflow:auto;scrollbar-width:none}
+.hud-row::-webkit-scrollbar{display:none}
+.hud-chip{
+  flex:0 0 auto;
+  min-height:38px;
+  padding:0 11px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid rgba(255,255,255,.11);
+  background:rgba(8,6,18,.72);
+  backdrop-filter:blur(14px);
+  color:#c8c3d5;
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.play-btn{
+  flex:0 0 52px;
+  width:52px;height:52px;
+  border-radius:18px;
+  border:1px solid rgba(34,211,216,.55);
+  background:linear-gradient(145deg,rgba(34,211,216,.28),rgba(168,85,247,.32));
+  box-shadow:inset 0 1px rgba(255,255,255,.2),0 8px 24px rgba(34,211,216,.16);
+  cursor:pointer;
+  font-size:20px;
+}
+
+.pattern-section{margin-top:14px}
+.eyebrow{
+  margin:0 2px 9px;
+  color:#777188;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.pattern-rail{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:minmax(138px,42vw);
+  gap:10px;
+  overflow-x:auto;
+  padding:2px 2px 9px;
+  scroll-snap-type:x proximity;
+  scrollbar-width:none;
+}
+.pattern-rail::-webkit-scrollbar{display:none}
+.pattern-btn{
+  scroll-snap-align:start;
+  min-height:66px;
+  padding:10px 13px;
+  border-radius:19px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.022));
+  box-shadow:inset 0 1px rgba(255,255,255,.1),0 8px 20px rgba(0,0,0,.2);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-align:left;
+  cursor:pointer;
+  transition:transform .16s var(--spring),border-color .18s,background .18s;
+  touch-action:manipulation;
+}
+.pattern-btn .glyph{font-size:25px;filter:drop-shadow(0 4px 10px rgba(168,85,247,.32))}
+.pattern-btn strong{display:block;font-size:14px}
+.pattern-btn small{display:block;margin-top:3px;color:var(--muted);font-size:10px}
+.pattern-btn.active{
+  border-color:rgba(191,93,255,.75);
+  background:linear-gradient(145deg,rgba(168,85,247,.28),rgba(236,72,153,.13));
+  box-shadow:inset 0 1px rgba(255,255,255,.16),0 0 0 1px rgba(168,85,247,.2),0 12px 28px rgba(168,85,247,.18);
+}
+
+.control-shell{
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:25px;
+  overflow:hidden;
+  background:rgba(14,11,25,.82);
+  box-shadow:inset 0 1px rgba(255,255,255,.055),0 18px 40px rgba(0,0,0,.22);
+}
+.tabbar{
+  position:sticky;
+  top:64px;
+  z-index:30;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+  padding:8px;
+  background:rgba(10,8,19,.94);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+}
+.tab-btn{
+  min-height:50px;
+  border-radius:16px;
+  border:1px solid transparent;
+  background:transparent;
+  color:#918b9e;
+  font-size:12px;
+  font-weight:850;
+  cursor:pointer;
+}
+.tab-btn.active{
+  color:#fff;
+  border-color:rgba(168,85,247,.4);
+  background:linear-gradient(145deg,rgba(168,85,247,.27),rgba(34,211,216,.09));
+  box-shadow:inset 0 1px rgba(255,255,255,.1),0 8px 18px rgba(0,0,0,.2);
+}
+.control-panel{display:none;padding:12px}
+.control-panel.active{display:block}
+.control-grid{display:grid;gap:10px}
+.control-card{
+  min-height:86px;
+  padding:13px 14px 15px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.09);
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  box-shadow:inset 0 1px rgba(255,255,255,.07),0 8px 20px rgba(0,0,0,.17);
+}
+.control-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.control-copy strong{display:block;font-size:15px;letter-spacing:-.01em}
+.control-copy small{display:block;margin-top:3px;color:#8f899d;font-size:11px}
+.value-badge{
+  min-width:54px;
+  min-height:38px;
+  padding:0 10px;
+  border-radius:13px;
+  border:1px solid rgba(168,85,247,.36);
+  background:rgba(168,85,247,.11);
+  display:grid;
+  place-items:center;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-weight:800;
+  color:#d5a7ff;
+  font-size:12px;
+}
+.range{
+  width:100%;
+  height:34px;
+  margin:0;
+  appearance:none;
+  -webkit-appearance:none;
+  background:transparent;
+  cursor:pointer;
+  touch-action:pan-y;
+}
+.range::-webkit-slider-runnable-track{
+  height:10px;
+  border-radius:99px;
+  background:linear-gradient(90deg,var(--iris) 0 var(--pct,50%),rgba(255,255,255,.1) var(--pct,50%) 100%);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.35),0 0 12px rgba(168,85,247,.08);
+}
+.range::-webkit-slider-thumb{
+  width:30px;height:30px;
+  margin-top:-10px;
+  appearance:none;
+  -webkit-appearance:none;
+  border-radius:50%;
+  border:3px solid #fff;
+  background:linear-gradient(145deg,#fff,#dcd5ea);
+  box-shadow:0 4px 12px rgba(0,0,0,.5),0 0 0 7px rgba(168,85,247,.14),0 0 24px rgba(168,85,247,.38);
+}
+.range::-moz-range-track{height:10px;border-radius:99px;background:rgba(255,255,255,.1)}
+.range::-moz-range-progress{height:10px;border-radius:99px;background:var(--iris)}
+.range::-moz-range-thumb{width:27px;height:27px;border:3px solid #fff;border-radius:50%;background:#fff}
+
+.stepper{
+  display:grid;
+  grid-template-columns:52px 1fr 52px;
+  gap:8px;
+  align-items:center;
+}
+.step-btn{
+  height:52px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.025));
+  box-shadow:inset 0 1px rgba(255,255,255,.1),0 6px 16px rgba(0,0,0,.22);
+  font-size:23px;
+  font-weight:850;
+  cursor:pointer;
+}
+.step-value{
+  height:52px;
+  border-radius:16px;
+  display:grid;
+  place-items:center;
+  background:rgba(168,85,247,.1);
+  border:1px solid rgba(168,85,247,.3);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:18px;
+  font-weight:900;
+}
+.toggle-card{
+  min-height:64px;
+  padding:10px 12px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.toggle-copy strong{font-size:14px}.toggle-copy small{display:block;margin-top:3px;color:#8f899d;font-size:10px}
+.toggle{
+  position:relative;
+  width:58px;height:34px;
+  flex:0 0 auto;
+  border:0;
+  border-radius:99px;
+  background:rgba(255,255,255,.12);
+  box-shadow:inset 0 2px 7px rgba(0,0,0,.42);
+  cursor:pointer;
+}
+.toggle::after{
+  content:"";
+  position:absolute;
+  width:28px;height:28px;
+  top:3px;left:3px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 3px 10px rgba(0,0,0,.5);
+  transition:transform .2s var(--spring),background .2s;
+}
+.toggle.on{background:linear-gradient(90deg,var(--iris),var(--bloom));box-shadow:0 0 20px rgba(168,85,247,.28)}
+.toggle.on::after{transform:translateX(24px)}
+
+.segmented{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.segmented.four{grid-template-columns:repeat(2,1fr)}
+.seg-btn,.preset-btn{
+  min-height:54px;
+  border-radius:17px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.018));
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.18);
+  color:#aaa4b8;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+}
+.seg-btn.active,.preset-btn.active{
+  color:#fff;
+  border-color:rgba(168,85,247,.55);
+  background:linear-gradient(145deg,rgba(168,85,247,.3),rgba(236,72,153,.12));
+  box-shadow:inset 0 1px rgba(255,255,255,.12),0 10px 22px rgba(168,85,247,.13);
+}
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.swatch{
+  position:relative;
+  min-height:58px;
+  border-radius:18px;
+  border:2px solid transparent;
+  background:var(--swatch);
+  box-shadow:inset 0 1px rgba(255,255,255,.25),0 8px 18px rgba(0,0,0,.22);
+  cursor:pointer;
+}
+.swatch.active{border-color:#fff;transform:translateY(-2px);box-shadow:0 0 0 4px rgba(168,85,247,.18),0 10px 26px rgba(0,0,0,.3)}
+.swatch.active::after{content:"✓";position:absolute;right:8px;bottom:6px;font-weight:950;text-shadow:0 2px 5px rgba(0,0,0,.7)}
+
+.preset-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.preset-btn{min-height:66px;color:#eeeaf8;text-align:left;padding:10px 13px}
+.preset-btn span{display:block;font-size:10px;margin-top:4px;color:#9891a6;font-weight:600}
+
+.bottom-dock{
+  position:fixed;
+  z-index:100;
+  left:50%;
+  bottom:calc(8px + var(--safe-bottom));
+  transform:translateX(-50%);
+  width:min(calc(100% - 18px),720px);
+  padding:8px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:24px;
+  background:rgba(9,7,18,.88);
+  backdrop-filter:blur(20px) saturate(1.25);
+  box-shadow:inset 0 1px rgba(255,255,255,.09),0 18px 50px rgba(0,0,0,.48);
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1.25fr;
+  gap:7px;
+}
+.dock-btn{
+  min-height:58px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.025));
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.22);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  color:#d7d1e3;
+  font-size:18px;
+  cursor:pointer;
+}
+.dock-btn span{font-size:9px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.dock-btn.primary{border-color:rgba(236,72,153,.55);background:linear-gradient(145deg,#a855f7,#ec4899);color:#fff}
+
+.toast{
+  position:fixed;
+  z-index:200;
+  left:50%;
+  top:calc(76px + var(--safe-top));
+  width:min(calc(100% - 32px),420px);
+  transform:translate(-50%,-18px) scale(.96);
+  opacity:0;
+  pointer-events:none;
+  padding:13px 15px;
+  border-radius:18px;
+  border:1px solid rgba(251,191,36,.45);
+  background:linear-gradient(145deg,rgba(75,43,14,.95),rgba(31,20,43,.96));
+  box-shadow:0 18px 44px rgba(0,0,0,.42),0 0 30px rgba(251,191,36,.1);
+  transition:opacity .22s,transform .32s var(--spring);
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.toast-icon{font-size:26px}.toast strong{display:block;font-size:13px}.toast small{display:block;margin-top:2px;color:#d1bf9a;font-size:10px}
+.combo-pop{
+  position:absolute;
+  z-index:8;
+  left:50%;top:58%;
+  transform:translate(-50%,-50%) scale(.7);
+  opacity:0;
+  pointer-events:none;
+  font-size:clamp(32px,10vw,58px);
+  font-weight:950;
+  font-style:italic;
+  letter-spacing:-.05em;
+  color:#fff;
+  text-shadow:0 4px 18px rgba(0,0,0,.6),0 0 28px rgba(236,72,153,.7);
+}
+.combo-pop.show{animation:combo .72s var(--spring)}
+@keyframes combo{0%{opacity:0;transform:translate(-50%,-40%) scale(.5) rotate(-5deg)}35%{opacity:1;transform:translate(-50%,-55%) scale(1.08) rotate(2deg)}100%{opacity:0;transform:translate(-50%,-78%) scale(.92)}}
+
+@media(min-width:760px){
+  .app{display:grid;grid-template-columns:minmax(420px,1.05fr) minmax(330px,.95fr);gap:16px;padding-top:16px}
+  .stage-card{position:sticky;top:82px;height:calc(100dvh - 110px);max-height:780px;grid-row:1 / span 3}
+  .pattern-section,.control-shell{grid-column:2}
+  .pattern-rail{grid-auto-columns:minmax(155px,1fr)}
+  .control-grid.two{grid-template-columns:repeat(2,1fr)}
+  .bottom-dock{width:520px}
+}
+@media(max-width:420px){
+  .topbar{padding-left:9px;padding-right:9px}.icon-btn{width:47px;height:47px}.stage-card{height:47svh;min-height:350px}.app{padding-left:7px;padding-right:7px}.tab-btn{font-size:11px}.bottom-dock{width:calc(100% - 12px)}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="ChromaFlora home">ChromaFlora</a>
+  <div class="top-actions">
+    <button class="icon-btn tactile" id="saveTop" aria-label="Save to gallery" title="Save to gallery">＋</button>
+    <button class="icon-btn primary tactile" id="exportTop" aria-label="Download PNG" title="Download PNG">⇩</button>
+    <button class="icon-btn tactile" id="shareTop" aria-label="Copy embed" title="Copy embed">⌘</button>
+  </div>
+</header>
+
+<main class="app">
+  <section class="stage-card" id="stage" aria-label="Live mandala viewport">
+    <canvas id="art"></canvas>
+    <div class="stage-glass"></div>
+    <div class="center-reticle"></div>
+    <div class="stage-top">
+      <div class="mode-pill"><strong id="modeName">Mandala</strong><span id="modeMeta">8-fold · 4 layers</span></div>
+      <div class="score-cluster">
+        <div class="score-line"><span id="levelText">LEVEL 1</span><b id="xpText">0 XP</b></div>
+        <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+      </div>
+    </div>
+    <div class="combo-pop" id="comboPop">3× FLOW</div>
+    <div class="stage-bottom">
+      <div class="hud-row">
+        <div class="hud-chip" id="pointsHud">✦ 0 pts</div>
+        <div class="hud-chip" id="fpsHud">◌ 60 fps</div>
+        <div class="hud-chip" id="streakHud">⚡ 0 streak</div>
+      </div>
+      <button class="play-btn tactile" id="playButton" aria-label="Start animation">▶</button>
+    </div>
+  </section>
+
+  <section class="pattern-section">
+    <p class="eyebrow">Choose a pattern</p>
+    <div class="pattern-rail" id="patternRail">
+      <button class="pattern-btn tactile active" data-pattern="mandala"><span class="glyph">☯</span><span><strong>Mandala</strong><small>Radial symmetry</small></span></button>
+      <button class="pattern-btn tactile" data-pattern="rose"><span class="glyph">🌹</span><span><strong>Rose Curve</strong><small>Petal equations</small></span></button>
+      <button class="pattern-btn tactile" data-pattern="spiro"><span class="glyph">⊕</span><span><strong>Spirograph</strong><small>Orbital tracing</small></span></button>
+      <button class="pattern-btn tactile" data-pattern="lissajous"><span class="glyph">∞</span><span><strong>Lissajous</strong><small>Harmonic weave</small></span></button>
+      <button class="pattern-btn tactile" data-pattern="sacred"><span class="glyph">✡</span><span><strong>Sacred Geo</strong><small>Circle lattice</small></span></button>
+      <button class="pattern-btn tactile" data-pattern="toroid"><span class="glyph">◎</span><span><strong>Toroid</strong><small>Projected field</small></span></button>
+    </div>
+  </section>
+
+  <section class="control-shell">
+    <div class="tabbar" role="tablist" aria-label="Mandala controls">
+      <button class="tab-btn active" data-tab="shape" role="tab">Shape</button>
+      <button class="tab-btn" data-tab="motion" role="tab">Motion</button>
+      <button class="tab-btn" data-tab="color" role="tab">Color</button>
+      <button class="tab-btn" data-tab="effects" role="tab">Effects</button>
+    </div>
+
+    <div class="control-panel active" data-panel="shape">
+      <div class="control-grid two">
+        <div class="control-card">
+          <div class="control-head"><div class="control-copy"><strong>Fold symmetry</strong><small>Number of repeated arms</small></div><div class="value-badge" id="symmetryBadge">8</div></div>
+          <div class="stepper"><button class="step-btn tactile" data-step="symmetry" data-delta="-1">−</button><div class="step-value" id="symmetryStep">8</div><button class="step-btn tactile" data-step="symmetry" data-delta="1">＋</button></div>
+        </div>
+        <div class="control-card">
+          <div class="control-head"><div class="control-copy"><strong>Layer stack</strong><small>Nested geometric depth</small></div><div class="value-badge" id="layersBadge">4</div></div>
+          <div class="stepper"><button class="step-btn tactile" data-step="layers" data-delta="-1">−</button><div class="step-value" id="layersStep">4</div><button class="step-btn tactile" data-step="layers" data-delta="1">＋</button></div>
+        </div>
+        <label class="control-card">
+          <div class="control-head"><div class="control-copy"><strong>Radius</strong><small>Fill the viewing portal</small></div><output class="value-badge" id="radiusOut">76%</output></div>
+          <input class="range" data-key="radius" id="radius" type="range" min="35" max="98" value="76">
+        </label>
+        <label class="control-card">
+          <div class="control-head"><div class="control-copy"><strong>Frequency</strong><small>Wave repetition count</small></div><output class="value-badge" id="freqOut">3.0</output></div>
+          <input class="range" data-key="freq" id="freq" type="range" min="0.5" max="14" step="0.5" value="3">
+        </label>
+        <label class="control-card">
+          <div class="control-head"><div class="control-copy"><strong>Amplitude</strong><small>Petal and wave depth</small></div><output class="value-badge" id="ampOut">34</output></div>
+          <input class="range" data-key="amp" id="amp" type="range" min="0" max="110" value="34">
+        </label>
+        <label class="control-card">
+          <div class="control-head"><div class="control-copy"><strong>Density</strong><small>Drawing precision</small></div><output class="value-badge" id="densityOut">420</output></div>
+          <input class="range" data-key="density" id="density" type="range" min="120" max="1200" step="60" value="420">
+        </label>
+      </div>
+      <div class="control-grid two" style="margin-top:10px">
+        <div class="toggle-card"><div class="toggle-copy"><strong>Mirror geometry</strong><small>Reflect every arm</small></div><button class="toggle on tactile" data-toggle="mirror" aria-label="Toggle mirror"></button></div>
+        <div class="toggle-card"><div class="toggle-copy"><strong>Golden spacing</strong><small>Phi-weighted rings</small></div><button class="toggle tactile" data-toggle="golden" aria-label="Toggle golden spacing"></button></div>
+      </div>
+    </div>
+
+    <div class="control-panel" data-panel="motion">
+      <div class="control-grid two">
+        <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Heading</strong><small>Rotate the full field</small></div><output class="value-badge" id="angleOut">0°</output></div><input class="range" data-key="angle" id="angle" type="range" min="0" max="360" value="0"></label>
+        <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Spin speed</strong><small>Continuous orbital drift</small></div><output class="value-badge" id="spinOut">0.20</output></div><input class="range" data-key="spin" id="spin" type="range" min="-1" max="1" step="0.02" value="0.2"></label>
+        <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Pulse</strong><small>Breathing geometry</small></div><output class="value-badge" id="pulseOut">0.35</output></div><input class="range" data-key="pulse" id="pulse" type="range" min="0" max="2" step="0.05" value="0.35"></label>
+        <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Phase</strong><small>Shift the wave relationship</small></div><output class="value-badge" id="phaseOut">0.00</output></div><input class="range" data-key="phase" id="phase" type="range" min="0" max="6.28" step="0.01" value="0"></label>
+      </div>
+      <div class="control-grid two" style="margin-top:10px">
+        <div class="toggle-card"><div class="toggle-copy"><strong>Auto animate</strong><small>Keep the field alive</small></div><button class="toggle tactile" data-toggle="animate" aria-label="Toggle animation"></button></div>
+        <div class="toggle-card"><div class="toggle-copy"><strong>Light trails</strong><small>Persistent motion echoes</small></div><button class="toggle tactile" data-toggle="trails" aria-label="Toggle trails"></button></div>
+      </div>
+    </div>
+
+    <div class="control-panel" data-panel="color">
+      <p class="eyebrow">Color behavior</p>
+      <div class="segmented four" id="colorModes">
+        <button class="seg-btn tactile active" data-color-mode="palette">Palette</button>
+        <button class="seg-btn tactile" data-color-mode="rainbow">Rainbow</button>
+        <button class="seg-btn tactile" data-color-mode="gradient">Gradient</button>
+        <button class="seg-btn tactile" data-color-mode="mono">Mono</button>
+      </div>
+      <p class="eyebrow" style="margin-top:18px">Signal color</p>
+      <div class="swatches" id="swatches">
+        <button class="swatch tactile active" style="--swatch:#a855f7" data-color="#a855f7" aria-label="Iris"></button>
+        <button class="swatch tactile" style="--swatch:#22d3d8" data-color="#22d3d8" aria-label="Aqua"></button>
+        <button class="swatch tactile" style="--swatch:#ec4899" data-color="#ec4899" aria-label="Bloom"></button>
+        <button class="swatch tactile" style="--swatch:#f97316" data-color="#f97316" aria-label="Ember"></button>
+        <button class="swatch tactile" style="--swatch:#10b981" data-color="#10b981" aria-label="Viridian"></button>
+        <button class="swatch tactile" style="--swatch:#fbbf24" data-color="#fbbf24" aria-label="Gold"></button>
+        <button class="swatch tactile" style="--swatch:#60a5fa" data-color="#60a5fa" aria-label="Blue"></button>
+        <button class="swatch tactile" style="--swatch:linear-gradient(135deg,#fff,#b8b5c8)" data-color="#ffffff" aria-label="White"></button>
+      </div>
+      <p class="eyebrow" style="margin-top:18px">Background</p>
+      <div class="segmented four" id="backgroundModes">
+        <button class="seg-btn tactile active" data-background="void">Void</button>
+        <button class="seg-btn tactile" data-background="radial">Aura</button>
+        <button class="seg-btn tactile" data-background="dark">Ink</button>
+        <button class="seg-btn tactile" data-background="light">Pearl</button>
+      </div>
+    </div>
+
+    <div class="control-panel" data-panel="effects">
+      <div class="control-grid two">
+        <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Line weight</strong><small>Stroke pressure</small></div><output class="value-badge" id="weightOut">1.4</output></div><input class="range" data-key="weight" id="weight" type="range" min="0.3" max="5" step="0.1" value="1.4"></label>
+        <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Glow</strong><small>Chromatic bloom radius</small></div><output class="value-badge" id="glowOut">0.65</output></div><input class="range" data-key="glow" id="glow" type="range" min="0" max="1" step="0.05" value="0.65"></label>
+        <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Turbulence</strong><small>Organic deformation</small></div><output class="value-badge" id="turbOut">0</output></div><input class="range" data-key="turb" id="turb" type="range" min="0" max="44" step="1" value="0"></label>
+        <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Opacity</strong><small>Signal transparency</small></div><output class="value-badge" id="opacityOut">0.84</output></div><input class="range" data-key="opacity" id="opacity" type="range" min="0.15" max="1" step="0.01" value="0.84"></label>
+      </div>
+      <p class="eyebrow" style="margin-top:18px">Instant mutations</p>
+      <div class="preset-grid" id="quickPresets">
+        <button class="preset-btn tactile" data-preset="lotus">Lotus bloom<span>Soft radial abundance</span></button>
+        <button class="preset-btn tactile" data-preset="neon">Neon oracle<span>Electric spectral field</span></button>
+        <button class="preset-btn tactile" data-preset="metatron">Metatron<span>Precise sacred lattice</span></button>
+        <button class="preset-btn tactile" data-preset="chaos">Beautiful chaos<span>Turbulent asymmetry</span></button>
+        <button class="preset-btn tactile" data-preset="galaxy">Galaxy engine<span>Animated toroidal drift</span></button>
+        <button class="preset-btn tactile" data-preset="pearl">Pearl signal<span>Quiet monochrome relief</span></button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="bottom-dock" aria-label="Mandala actions">
+  <button class="dock-btn tactile" id="mutateBtn">✦<span>Mutate</span></button>
+  <button class="dock-btn tactile" id="resetBtn">↺<span>Reset</span></button>
+  <button class="dock-btn tactile" id="saveBtn">♡<span>Save</span></button>
+  <button class="dock-btn primary tactile" id="exportBtn">⇩<span>PNG 2×</span></button>
+</nav>
+
+<div class="toast" id="toast"><div class="toast-icon" id="toastIcon">🏆</div><div><strong id="toastTitle">Achievement unlocked</strong><small id="toastCopy">Your first living pattern</small></div></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+  const canvas = $('#art');
+  const stage = $('#stage');
+  const ctx = canvas.getContext('2d', { alpha:false });
+  const palette = ['#a855f7','#22d3d8','#ec4899','#f97316','#10b981','#fbbf24','#60a5fa','#ffffff'];
+
+  const defaults = {
+    pattern:'mandala', symmetry:8, layers:4, radius:76, freq:3, amp:34,
+    density:420, mirror:true, golden:false, angle:0, spin:.2, pulse:.35,
+    phase:0, animate:false, trails:false, colorMode:'palette', color:'#a855f7',
+    background:'void', weight:1.4, glow:.65, turb:0, opacity:.84
+  };
+  const P = {...defaults};
+  let W=1,H=1,dpr=1,t=0,raf=0,last=performance.now(),fps=60,points=0;
+  let xp = Number(localStorage.getItem('cf_mandala_xp_v2') || 0);
+  let streak = Number(localStorage.getItem('cf_mandala_streak_v2') || 0);
+  let combo=0, comboTimer=0, toastTimer=0, awardGate=0;
+
+  const fmt = {
+    radius:v=>Math.round(v)+'%', freq:v=>Number(v).toFixed(1), amp:v=>Math.round(v), density:v=>Math.round(v),
+    angle:v=>Math.round(v)+'°', spin:v=>Number(v).toFixed(2), pulse:v=>Number(v).toFixed(2), phase:v=>Number(v).toFixed(2),
+    weight:v=>Number(v).toFixed(1), glow:v=>Number(v).toFixed(2), turb:v=>Math.round(v), opacity:v=>Number(v).toFixed(2)
+  };
+
+  function vibrate(ms=10){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch{} }
+  function clamp(v,min,max){ return Math.min(max,Math.max(min,v)); }
+  function hexToRgba(hex,a){
+    const h=hex.replace('#','').padEnd(6,'f');
+    const n=parseInt(h.length===3?h.split('').map(x=>x+x).join(''):h.slice(0,6),16);
+    return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`;
+  }
+  function showToast(title,copy,icon='🏆'){
+    $('#toastTitle').textContent=title; $('#toastCopy').textContent=copy; $('#toastIcon').textContent=icon;
+    $('#toast').classList.add('show'); clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),2200);
+  }
+  function updateRewards(){
+    const level=Math.floor(xp/250)+1;
+    const progress=(xp%250)/250*100;
+    $('#levelText').textContent='LEVEL '+level;
+    $('#xpText').textContent=xp+' XP';
+    $('#xpFill').style.width=progress+'%';
+    $('#streakHud').textContent='⚡ '+streak+' streak';
+  }
+  function award(amount=3, reason='flow'){
+    const now=performance.now();
+    if(now-awardGate<90) return;
+    awardGate=now;
+    const before=Math.floor(xp/250)+1;
+    xp+=amount; streak+=1; combo+=1;
+    localStorage.setItem('cf_mandala_xp_v2',String(xp));
+    localStorage.setItem('cf_mandala_streak_v2',String(streak));
+    updateRewards();
+    clearTimeout(comboTimer);
+    comboTimer=setTimeout(()=>{combo=0},1500);
+    if(combo>=3){
+      const pop=$('#comboPop'); pop.textContent=combo+'× FLOW'; pop.classList.remove('show'); void pop.offsetWidth; pop.classList.add('show');
+    }
+    const after=Math.floor(xp/250)+1;
+    if(after>before) showToast('Level '+after+' reached','Your geometry vocabulary is expanding','✦');
+    else if(streak===10) showToast('Pattern instinct','Ten deliberate changes in one session','⚡');
+    else if(reason==='mutate') showToast('Mutation captured','A new configuration entered the archive','🧬');
+  }
+
+  function sizeCanvas(){
+    const r=stage.getBoundingClientRect();
+    W=Math.max(1,Math.round(r.width)); H=Math.max(1,Math.round(r.height)); dpr=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=Math.round(W*dpr); canvas.height=Math.round(H*dpr);
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    draw();
+  }
+
+  function background(){
+    if(P.trails && P.animate){ ctx.fillStyle='rgba(7,6,17,.12)';ctx.fillRect(0,0,W,H);return; }
+    if(P.background==='light'){ctx.fillStyle='#efeaf6';ctx.fillRect(0,0,W,H);return;}
+    if(P.background==='dark'){ctx.fillStyle='#10101a';ctx.fillRect(0,0,W,H);return;}
+    const g=ctx.createRadialGradient(W*.5,H*.48,0,W*.5,H*.5,Math.max(W,H)*.65);
+    if(P.background==='radial'){g.addColorStop(0,'#24103b');g.addColorStop(.48,'#100b24');g.addColorStop(1,'#04030b');}
+    else{g.addColorStop(0,'#0d0a1c');g.addColorStop(.6,'#070611');g.addColorStop(1,'#020207');}
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  }
+  function lineColor(index,total,layer=0){
+    if(P.colorMode==='rainbow') return `hsla(${(index/Math.max(total,1)*360+t*18)%360},92%,68%,${P.opacity})`;
+    if(P.colorMode==='mono') return P.background==='light'?`rgba(20,14,34,${P.opacity})`:`rgba(255,255,255,${P.opacity})`;
+    if(P.colorMode==='gradient') return index%2?hexToRgba(P.color,P.opacity):hexToRgba('#22d3d8',P.opacity);
+    return hexToRgba(palette[(index+layer)%palette.length],P.opacity);
+  }
+  function noise(a,b){ return Math.sin(a*1.73+b*2.31+t*.7)*Math.cos(a*.83-b*1.17+t*.33); }
+  function polarPoint(cx,cy,r,a){return [cx+r*Math.cos(a),cy+r*Math.sin(a)]}
+  function strokeSetup(color,w=P.weight){ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineJoin='round';ctx.lineCap='round';ctx.shadowColor=color;ctx.shadowBlur=P.glow*22;}
+
+  function drawMandala(){
+    const cx=W/2,cy=H/2,maxR=Math.min(W,H)*.46*(P.radius/100),steps=Math.max(120,Math.round(P.density)); let pts=0;
+    const rot=P.angle*Math.PI/180+t*P.spin;
+    for(let l=0;l<P.layers;l++){
+      const lf=(l+1)/P.layers;
+      const base=P.golden?maxR*Math.pow(lf,.72):maxR*lf;
+      for(let s=0;s<P.symmetry;s++){
+        const arm=s/P.symmetry*Math.PI*2+rot;
+        strokeSetup(lineColor(s,P.symmetry,l));ctx.beginPath();
+        for(let i=0;i<=steps;i++){
+          const q=i/steps*Math.PI*2;
+          const wave=Math.sin(P.freq*q+P.phase+t*P.pulse)*P.amp*(.35+.65*lf);
+          const turbulence=P.turb*noise(q,arm)*.55;
+          const r=clamp(base+wave+turbulence,0,maxR*1.18);
+          const a=q+arm;
+          const [x,y]=polarPoint(cx,cy,r,a);
+          i?ctx.lineTo(x,y):ctx.moveTo(x,y);pts++;
+        }
+        ctx.closePath();ctx.stroke();
+        if(P.mirror){
+          ctx.beginPath();
+          for(let i=0;i<=steps;i++){
+            const q=i/steps*Math.PI*2;
+            const wave=Math.sin(P.freq*q+P.phase+t*P.pulse)*P.amp*(.35+.65*lf);
+            const r=clamp(base+wave+P.turb*noise(-q,arm)*.55,0,maxR*1.18);
+            const a=-q+arm;
+            const [x,y]=polarPoint(cx,cy,r,a);
+            i?ctx.lineTo(x,y):ctx.moveTo(x,y);pts++;
+          }
+          ctx.closePath();ctx.stroke();
+        }
+      }
+    }
+    return pts;
+  }
+  function drawRose(){
+    const cx=W/2,cy=H/2,maxR=Math.min(W,H)*.43*(P.radius/100),steps=P.density*2,rot=P.angle*Math.PI/180+t*P.spin;let pts=0;
+    for(let l=0;l<P.layers;l++){
+      strokeSetup(lineColor(l,P.layers,l),P.weight+(.2*l/P.layers));ctx.beginPath();
+      const scale=1-l*.1;
+      for(let i=0;i<=steps;i++){
+        const a=i/steps*Math.PI*2*2;
+        let r=maxR*scale*Math.cos(P.freq*a+P.phase+t*P.pulse)+P.turb*noise(a,l)*.4;
+        const x=cx+r*Math.cos(a+rot+l*.08),y=cy+r*Math.sin(a+rot+l*.08);
+        i?ctx.lineTo(x,y):ctx.moveTo(x,y);pts++;
+      }
+      ctx.stroke();
+    }
+    return pts;
+  }
+  function drawSpiro(){
+    const cx=W/2,cy=H/2,scale=Math.min(W,H)/540*(P.radius/76),R=160*scale,r=61*scale,d=(75+P.amp*.55)*scale;
+    const steps=Math.max(900,P.density*4),rot=P.angle*Math.PI/180+t*P.spin;strokeSetup(lineColor(1,4),P.weight);ctx.beginPath();
+    for(let i=0;i<=steps;i++){
+      const q=i/steps*Math.PI*2*14+rot,dr=R-r;
+      const x=cx+dr*Math.cos(q)+d*Math.cos(dr/r*q)+P.turb*noise(q,1)*.25;
+      const y=cy+dr*Math.sin(q)-d*Math.sin(dr/r*q)+P.turb*noise(q,2)*.25;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    ctx.stroke();return steps;
+  }
+  function drawLissajous(){
+    const cx=W/2,cy=H/2,R=Math.min(W,H)*.42*(P.radius/100),steps=P.density*3;let pts=0;
+    for(let l=0;l<P.layers;l++){
+      strokeSetup(lineColor(l,P.layers,l));ctx.beginPath();const sc=1-l*.09;
+      for(let i=0;i<=steps;i++){
+        const q=i/steps*Math.PI*2;
+        const x=cx+R*sc*Math.sin(P.freq*q+P.phase+t*P.pulse+l*.15);
+        const y=cy+R*sc*Math.sin((P.freq+2.15)*q+l*.18);
+        i?ctx.lineTo(x,y):ctx.moveTo(x,y);pts++;
+      }
+      ctx.stroke();
+    }
+    return pts;
+  }
+  function drawSacred(){
+    const cx=W/2,cy=H/2,R=Math.min(W,H)*.39*(P.radius/100),rot=P.angle*Math.PI/180+t*P.spin;let pts=0;
+    for(let ring=1;ring<=P.layers;ring++){
+      const rr=R*ring/P.layers;
+      for(let i=0;i<P.symmetry;i++){
+        const a=i/P.symmetry*Math.PI*2+rot,x=cx+rr*Math.cos(a),y=cy+rr*Math.sin(a),cr=Math.max(8,rr*Math.PI/P.symmetry*.65);
+        strokeSetup(lineColor(i,P.symmetry,ring));ctx.beginPath();ctx.arc(x,y,cr,0,Math.PI*2);ctx.stroke();pts+=72;
+      }
+    }
+    strokeSetup(lineColor(0,1));ctx.beginPath();ctx.arc(cx,cy,R*.12,0,Math.PI*2);ctx.stroke();return pts;
+  }
+  function drawToroid(){
+    const cx=W/2,cy=H/2,R=Math.min(W,H)*.3*(P.radius/100),r=R*.42,lines=Math.max(18,P.symmetry*3),steps=90,rot=P.angle*Math.PI/180+t*P.spin;let pts=0;
+    for(let u=0;u<lines;u++){
+      const U=u/lines*Math.PI*2;strokeSetup(lineColor(u,lines),Math.max(.45,P.weight*.75));ctx.beginPath();
+      for(let j=0;j<=steps;j++){
+        const v=j/steps*Math.PI*2;
+        const x3=(R+r*Math.cos(v))*Math.cos(U),y3=(R+r*Math.cos(v))*Math.sin(U),z3=r*Math.sin(v);
+        const x=cx+(x3*Math.cos(rot)-y3*Math.sin(rot));
+        const y=cy+(x3*Math.sin(rot)+y3*Math.cos(rot))*.58+z3*.48;
+        j?ctx.lineTo(x,y):ctx.moveTo(x,y);pts++;
+      }
+      ctx.stroke();
+    }
+    return pts;
+  }
+
+  function draw(){
+    background();
+    ctx.save();
+    ctx.globalAlpha=1;
+    points = P.pattern==='mandala'?drawMandala():P.pattern==='rose'?drawRose():P.pattern==='spiro'?drawSpiro():P.pattern==='lissajous'?drawLissajous():P.pattern==='sacred'?drawSacred():drawToroid();
+    ctx.restore();ctx.shadowBlur=0;
+    $('#pointsHud').textContent='✦ '+points.toLocaleString()+' pts';
+    const name={mandala:'Mandala',rose:'Rose Curve',spiro:'Spirograph',lissajous:'Lissajous',sacred:'Sacred Geo',toroid:'Toroid'}[P.pattern];
+    $('#modeName').textContent=name;$('#modeMeta').textContent=P.symmetry+'-fold · '+P.layers+' layers';
+  }
+  function loop(now){
+    const dt=Math.min(.05,(now-last)/1000);last=now;fps=Math.round(1/Math.max(dt,.001));
+    $('#fpsHud').textContent='◌ '+fps+' fps';
+    if(P.animate){t+=dt;stage.style.setProperty('--spin',(t*18)+'deg');draw();raf=requestAnimationFrame(loop);}else raf=0;
+  }
+  function setAnimate(on){
+    P.animate=on;$$('[data-toggle="animate"]').forEach(b=>b.classList.toggle('on',on));
+    $('#playButton').textContent=on?'Ⅱ':'▶';$('#playButton').setAttribute('aria-label',on?'Pause animation':'Start animation');
+    if(on&&!raf){last=performance.now();raf=requestAnimationFrame(loop)}
+    if(!on&&raf){cancelAnimationFrame(raf);raf=0;draw()}
+  }
+  function schedule(){ if(!P.animate) draw(); }
+  function rangePaint(el){const min=+el.min,max=+el.max,v=+el.value;el.style.setProperty('--pct',((v-min)/(max-min)*100)+'%')}
+  function syncUI(){
+    $('#symmetryBadge').textContent=P.symmetry;$('#symmetryStep').textContent=P.symmetry;$('#layersBadge').textContent=P.layers;$('#layersStep').textContent=P.layers;
+    for(const el of $$('.range')){const key=el.dataset.key;el.value=P[key];rangePaint(el);const out=$('#'+el.id+'Out');if(out)out.textContent=fmt[key]?fmt[key](P[key]):P[key]}
+    $$('[data-toggle]').forEach(el=>el.classList.toggle('on',!!P[el.dataset.toggle]));
+    $$('[data-pattern]').forEach(el=>el.classList.toggle('active',el.dataset.pattern===P.pattern));
+    $$('[data-color-mode]').forEach(el=>el.classList.toggle('active',el.dataset.colorMode===P.colorMode));
+    $$('[data-background]').forEach(el=>el.classList.toggle('active',el.dataset.background===P.background));
+    $$('[data-color]').forEach(el=>el.classList.toggle('active',el.dataset.color.toLowerCase()===P.color.toLowerCase()));
+    setAnimate(P.animate);updateRewards();draw();
+  }
+
+  $$('.range').forEach(el=>{
+    rangePaint(el);
+    el.addEventListener('input',()=>{const key=el.dataset.key;P[key]=+el.value;rangePaint(el);const out=$('#'+el.id+'Out');if(out)out.textContent=fmt[key]?fmt[key](P[key]):P[key];schedule();award(2)});
+    el.addEventListener('change',()=>vibrate(8));
+  });
+  $$('[data-step]').forEach(btn=>btn.addEventListener('click',()=>{
+    const key=btn.dataset.step,delta=+btn.dataset.delta;
+    P[key]=clamp(P[key]+delta,key==='symmetry'?2:1,key==='symmetry'?24:12);
+    syncUI();vibrate(12);award(5);
+  }));
+  $$('[data-toggle]').forEach(btn=>btn.addEventListener('click',()=>{
+    const key=btn.dataset.toggle;P[key]=!P[key];btn.classList.toggle('on',P[key]);
+    if(key==='animate')setAnimate(P[key]);else schedule();vibrate(14);award(4);
+  }));
+  $$('[data-pattern]').forEach(btn=>btn.addEventListener('click',()=>{
+    P.pattern=btn.dataset.pattern;$$('[data-pattern]').forEach(x=>x.classList.toggle('active',x===btn));draw();vibrate(16);award(12);showToast(btn.querySelector('strong').textContent+' selected','The viewport has reconfigured','◉');
+  }));
+  $$('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{
+    $$('[data-tab]').forEach(x=>x.classList.toggle('active',x===btn));$$('[data-panel]').forEach(x=>x.classList.toggle('active',x.dataset.panel===btn.dataset.tab));vibrate(7);
+  }));
+  $$('[data-color-mode]').forEach(btn=>btn.addEventListener('click',()=>{P.colorMode=btn.dataset.colorMode;$$('[data-color-mode]').forEach(x=>x.classList.toggle('active',x===btn));schedule();vibrate(10);award(4)}));
+  $$('[data-background]').forEach(btn=>btn.addEventListener('click',()=>{P.background=btn.dataset.background;$$('[data-background]').forEach(x=>x.classList.toggle('active',x===btn));schedule();vibrate(10);award(4)}));
+  $$('[data-color]').forEach(btn=>btn.addEventListener('click',()=>{P.color=btn.dataset.color;$$('[data-color]').forEach(x=>x.classList.toggle('active',x===btn));schedule();vibrate(12);award(5)}));
+
+  const presets={
+    lotus:{pattern:'mandala',symmetry:12,layers:6,freq:4,amp:26,radius:82,colorMode:'palette',color:'#ec4899',turb:0,glow:.75,animate:false},
+    neon:{pattern:'rose',symmetry:8,layers:5,freq:5,amp:18,radius:88,colorMode:'rainbow',background:'radial',glow:1,spin:.24,pulse:.5,animate:true},
+    metatron:{pattern:'sacred',symmetry:6,layers:4,radius:84,colorMode:'gradient',color:'#fbbf24',weight:1.1,glow:.45,animate:false},
+    chaos:{pattern:'mandala',symmetry:7,layers:8,freq:7,amp:45,turb:30,density:660,colorMode:'rainbow',spin:.12,pulse:.7,animate:true},
+    galaxy:{pattern:'toroid',symmetry:14,layers:5,radius:86,colorMode:'rainbow',background:'void',spin:.34,pulse:.2,glow:.9,animate:true},
+    pearl:{pattern:'lissajous',symmetry:8,layers:6,freq:3.5,amp:12,colorMode:'mono',background:'light',weight:.8,glow:.15,opacity:.72,animate:false}
+  };
+  $$('[data-preset]').forEach(btn=>btn.addEventListener('click',()=>{Object.assign(P,presets[btn.dataset.preset]);syncUI();vibrate([12,35,18]);award(16,'mutate');$$('[data-preset]').forEach(x=>x.classList.toggle('active',x===btn))}));
+
+  function mutate(){
+    const patterns=['mandala','rose','spiro','lissajous','sacred','toroid'];
+    P.pattern=patterns[Math.floor(Math.random()*patterns.length)];P.symmetry=2+Math.floor(Math.random()*15);P.layers=2+Math.floor(Math.random()*7);P.radius=62+Math.floor(Math.random()*31);P.freq=1.5+Math.floor(Math.random()*16)/2;P.amp=12+Math.floor(Math.random()*46);P.angle=Math.floor(Math.random()*360);P.spin=(Math.random()*.7-.35);P.pulse=Math.random()*.9;P.turb=Math.random()<.45?Math.floor(Math.random()*25):0;P.colorMode=['palette','rainbow','gradient'][Math.floor(Math.random()*3)];P.color=palette[Math.floor(Math.random()*palette.length)];P.background=['void','radial','dark'][Math.floor(Math.random()*3)];
+    syncUI();vibrate([14,30,18]);award(20,'mutate');
+  }
+  function reset(){Object.assign(P,defaults);streak=0;localStorage.setItem('cf_mandala_streak_v2','0');syncUI();vibrate(18);showToast('Field reset','Returned to the original eight-fold seed','↺')}
+  function exportPNG(){
+    const out=document.createElement('canvas'),scale=2;out.width=canvas.width*scale;out.height=canvas.height*scale;const o=out.getContext('2d');o.drawImage(canvas,0,0,out.width,out.height);const a=document.createElement('a');a.href=out.toDataURL('image/png');a.download='chromaflora-'+P.pattern+'-'+Date.now()+'.png';a.click();award(25);showToast('PNG forged','A 2× artwork has been downloaded','⇩');vibrate([10,25,10]);
+  }
+  function save(){
+    try{const saved=JSON.parse(localStorage.getItem('cf_artworks')||'[]');saved.unshift({id:Date.now(),username:'me',prompt:`${P.pattern} · ${P.symmetry}-fold · level ${Math.floor(xp/250)+1}`,dataUrl:canvas.toDataURL('image/png'),timestamp:Date.now()});localStorage.setItem('cf_artworks',JSON.stringify(saved.slice(0,30)));}catch{}
+    award(18);showToast('Saved to gallery','This configuration is now in your local archive','♡');vibrate([12,25,12]);
+  }
+  async function share(){
+    const url=`${location.origin}/mandala-v2.html?pattern=${P.pattern}&fold=${P.symmetry}`;
+    const snippet=`<iframe src="${url}" width="560" height="620" style="border:0;border-radius:24px;background:#070611" title="ChromaFlora mandala"></iframe>`;
+    try{await navigator.clipboard.writeText(snippet);showToast('Embed copied','Paste the iframe into any compatible page','⌘');award(8)}catch{showToast('Copy blocked','Your browser did not allow clipboard access','!')}
+  }
+
+  $('#playButton').addEventListener('click',()=>{setAnimate(!P.animate);vibrate(15);award(5)});
+  $('#mutateBtn').addEventListener('click',mutate);$('#resetBtn').addEventListener('click',reset);$('#saveBtn').addEventListener('click',save);$('#exportBtn').addEventListener('click',exportPNG);
+  $('#saveTop').addEventListener('click',save);$('#exportTop').addEventListener('click',exportPNG);$('#shareTop').addEventListener('click',share);
+
+  new ResizeObserver(sizeCanvas).observe(stage);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&raf){cancelAnimationFrame(raf);raf=0}else if(!document.hidden&&P.animate){last=performance.now();raf=requestAnimationFrame(loop)}});
+  syncUI();sizeCanvas();
+  setTimeout(()=>showToast('Viewport online','Touch a control to begin building your streak','✦'),480);
+})();
+</script>
+</body>
+</html>
