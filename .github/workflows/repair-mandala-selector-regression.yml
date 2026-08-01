@@ -6,6 +6,12 @@ on:
       - fix/mandala-v2-review-comments
     paths:
       - .github/workflows/repair-mandala-selector-regression.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/repair-mandala-selector-regression.yml
+      - .github/scripts/repair-mandala-selector-regression.mjs
 
 permissions:
   contents: write
