@@ -918,7 +918,7 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);o
   }
   function setAnimate(on){
     P.animate=on;
-    $('[data-toggle="animate"]').forEach(b=>{
+    $$('[data-toggle="animate"]').forEach(b=>{
       b.classList.toggle('on',on);
       b.setAttribute('aria-checked',String(on));
     });
@@ -935,7 +935,7 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);o
   function syncUI(){
     $('#symmetryBadge').textContent=P.symmetry;$('#symmetryStep').textContent=P.symmetry;$('#layersBadge').textContent=P.layers;$('#layersStep').textContent=P.layers;
     for(const el of $$('.range')){const key=el.dataset.key;el.value=P[key];rangePaint(el);const out=$('#'+el.id+'Out');if(out)out.textContent=fmt[key]?fmt[key](P[key]):P[key]}
-    $('[data-toggle]').forEach(el=>{
+    $$('[data-toggle]').forEach(el=>{
       const on=!!P[el.dataset.toggle];
       el.classList.toggle('on',on);
       el.setAttribute('aria-checked',String(on));
@@ -957,14 +957,14 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);o
     P[key]=clamp(P[key]+delta,key==='symmetry'?2:1,key==='symmetry'?24:12);
     syncUI();vibrate(12);award(5);
   }));
-  $('[data-toggle]').forEach(btn=>btn.addEventListener('click',()=>{
+  $$('[data-toggle]').forEach(btn=>btn.addEventListener('click',()=>{
     const key=btn.dataset.toggle;P[key]=!P[key];btn.classList.toggle('on',P[key]);btn.setAttribute('aria-checked',String(P[key]));
     if(key==='animate')setAnimate(P[key]);else schedule();vibrate(14);award(4);
   }));
   $$('[data-pattern]').forEach(btn=>btn.addEventListener('click',()=>{
     P.pattern=btn.dataset.pattern;$$('[data-pattern]').forEach(x=>x.classList.toggle('active',x===btn));draw();vibrate(16);award(12);showToast(btn.querySelector('strong').textContent+' selected','The viewport has reconfigured','◉');
   }));
-  const tabs=$('[data-tab]');
+  const tabs=$$('[data-tab]');
   function activateTab(tab,{focus=false}={}){
     tabs.forEach(item=>{
       const selected=item===tab;
