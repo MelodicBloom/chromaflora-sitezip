@@ -26,8 +26,9 @@ jobs:
       - name: Validate repaired diff
         run: |
           git diff --check
-          grep -Fq '$$(\x27[data-toggle="animate"]\x27).forEach' public/mandala-v2.html || grep -Fq '$$(\x27[data-toggle="animate"]\x27)' public/mandala-v2.html
-          grep -Fq 'const tabs=$$(' public/mandala-v2.html
+          grep -Fq "\$\$('[data-toggle=\"animate\"]').forEach" public/mandala-v2.html
+          grep -Fq "const tabs=\$\$('[data-tab]');" public/mandala-v2.html
+          ! grep -Fq "const tabs=\$('[data-tab]');" public/mandala-v2.html
 
       - name: Commit repaired HTML and remove helpers
         run: |
