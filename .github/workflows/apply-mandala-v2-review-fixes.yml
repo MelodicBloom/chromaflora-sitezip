@@ -1,0 +1,48 @@
+name: Apply Mandala V2 Review Fixes
+
+on:
+  push:
+    branches:
+      - fix/mandala-v2-review-comments
+    paths:
+      - .github/workflows/apply-mandala-v2-review-fixes.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/apply-mandala-v2-review-fixes.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out review-fix branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/mandala-v2-review-comments
+          fetch-depth: 0
+
+      - name: Apply asserted fixes
+        run: node .github/scripts/apply-mandala-v2-review-fixes.mjs
+
+      - name: Validate patch
+        run: |
+          git diff --check
+          grep -q 'aria-selected="true"' public/mandala-v2.html
+          grep -q 'role="switch" aria-checked="true"' public/mandala-v2.html
+          grep -q 'drawRaf=requestAnimationFrame' public/mandala-v2.html
+          ! grep -q 'user-scalable=no' public/mandala-v2.html
+
+      - name: Commit reviewed changes and remove one-run helpers
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/mandala-v2.html
+          git rm .github/scripts/apply-mandala-v2-review-fixes.mjs
+          git rm .github/workflows/apply-mandala-v2-review-fixes.yml
+          git commit -m "fix: address mandala v2 review feedback"
+          git push origin HEAD:fix/mandala-v2-review-comments
