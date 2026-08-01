@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#070611">
 <title>Mandala Studio V2 — ChromaFlora</title>
 <meta name="description" content="A mobile-first tactile mandala generator with live geometry, motion, color, rewards, haptics, and PNG export.">
@@ -592,14 +592,14 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);o
   </section>
 
   <section class="control-shell">
-    <div class="tabbar" role="tablist" aria-label="Mandala controls">
-      <button class="tab-btn active" data-tab="shape" role="tab">Shape</button>
-      <button class="tab-btn" data-tab="motion" role="tab">Motion</button>
-      <button class="tab-btn" data-tab="color" role="tab">Color</button>
-      <button class="tab-btn" data-tab="effects" role="tab">Effects</button>
+    <div class="tabbar" role="tablist" aria-label="Mandala controls" aria-orientation="horizontal">
+      <button class="tab-btn active" id="tab-shape" data-tab="shape" role="tab" aria-selected="true" aria-controls="panel-shape" tabindex="0">Shape</button>
+      <button class="tab-btn" id="tab-motion" data-tab="motion" role="tab" aria-selected="false" aria-controls="panel-motion" tabindex="-1">Motion</button>
+      <button class="tab-btn" id="tab-color" data-tab="color" role="tab" aria-selected="false" aria-controls="panel-color" tabindex="-1">Color</button>
+      <button class="tab-btn" id="tab-effects" data-tab="effects" role="tab" aria-selected="false" aria-controls="panel-effects" tabindex="-1">Effects</button>
     </div>
 
-    <div class="control-panel active" data-panel="shape">
+    <div class="control-panel active" id="panel-shape" data-panel="shape" role="tabpanel" aria-labelledby="tab-shape">
       <div class="control-grid two">
         <div class="control-card">
           <div class="control-head"><div class="control-copy"><strong>Fold symmetry</strong><small>Number of repeated arms</small></div><div class="value-badge" id="symmetryBadge">8</div></div>
@@ -627,12 +627,12 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);o
         </label>
       </div>
       <div class="control-grid two" style="margin-top:10px">
-        <div class="toggle-card"><div class="toggle-copy"><strong>Mirror geometry</strong><small>Reflect every arm</small></div><button class="toggle on tactile" data-toggle="mirror" aria-label="Toggle mirror"></button></div>
-        <div class="toggle-card"><div class="toggle-copy"><strong>Golden spacing</strong><small>Phi-weighted rings</small></div><button class="toggle tactile" data-toggle="golden" aria-label="Toggle golden spacing"></button></div>
+        <div class="toggle-card"><div class="toggle-copy"><strong>Mirror geometry</strong><small>Reflect every arm</small></div><button class="toggle on tactile" data-toggle="mirror" role="switch" aria-checked="true" aria-label="Toggle mirror"></button></div>
+        <div class="toggle-card"><div class="toggle-copy"><strong>Golden spacing</strong><small>Phi-weighted rings</small></div><button class="toggle tactile" data-toggle="golden" role="switch" aria-checked="false" aria-label="Toggle golden spacing"></button></div>
       </div>
     </div>
 
-    <div class="control-panel" data-panel="motion">
+    <div class="control-panel" id="panel-motion" data-panel="motion" role="tabpanel" aria-labelledby="tab-motion" hidden>
       <div class="control-grid two">
         <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Heading</strong><small>Rotate the full field</small></div><output class="value-badge" id="angleOut">0°</output></div><input class="range" data-key="angle" id="angle" type="range" min="0" max="360" value="0"></label>
         <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Spin speed</strong><small>Continuous orbital drift</small></div><output class="value-badge" id="spinOut">0.20</output></div><input class="range" data-key="spin" id="spin" type="range" min="-1" max="1" step="0.02" value="0.2"></label>
@@ -640,12 +640,12 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);o
         <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Phase</strong><small>Shift the wave relationship</small></div><output class="value-badge" id="phaseOut">0.00</output></div><input class="range" data-key="phase" id="phase" type="range" min="0" max="6.28" step="0.01" value="0"></label>
       </div>
       <div class="control-grid two" style="margin-top:10px">
-        <div class="toggle-card"><div class="toggle-copy"><strong>Auto animate</strong><small>Keep the field alive</small></div><button class="toggle tactile" data-toggle="animate" aria-label="Toggle animation"></button></div>
-        <div class="toggle-card"><div class="toggle-copy"><strong>Light trails</strong><small>Persistent motion echoes</small></div><button class="toggle tactile" data-toggle="trails" aria-label="Toggle trails"></button></div>
+        <div class="toggle-card"><div class="toggle-copy"><strong>Auto animate</strong><small>Keep the field alive</small></div><button class="toggle tactile" data-toggle="animate" role="switch" aria-checked="false" aria-label="Toggle animation"></button></div>
+        <div class="toggle-card"><div class="toggle-copy"><strong>Light trails</strong><small>Persistent motion echoes</small></div><button class="toggle tactile" data-toggle="trails" role="switch" aria-checked="false" aria-label="Toggle trails"></button></div>
       </div>
     </div>
 
-    <div class="control-panel" data-panel="color">
+    <div class="control-panel" id="panel-color" data-panel="color" role="tabpanel" aria-labelledby="tab-color" hidden>
       <p class="eyebrow">Color behavior</p>
       <div class="segmented four" id="colorModes">
         <button class="seg-btn tactile active" data-color-mode="palette">Palette</button>
@@ -673,7 +673,7 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);o
       </div>
     </div>
 
-    <div class="control-panel" data-panel="effects">
+    <div class="control-panel" id="panel-effects" data-panel="effects" role="tabpanel" aria-labelledby="tab-effects" hidden>
       <div class="control-grid two">
         <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Line weight</strong><small>Stroke pressure</small></div><output class="value-badge" id="weightOut">1.4</output></div><input class="range" data-key="weight" id="weight" type="range" min="0.3" max="5" step="0.1" value="1.4"></label>
         <label class="control-card"><div class="control-head"><div class="control-copy"><strong>Glow</strong><small>Chromatic bloom radius</small></div><output class="value-badge" id="glowOut">0.65</output></div><input class="range" data-key="glow" id="glow" type="range" min="0" max="1" step="0.05" value="0.65"></label>
@@ -720,7 +720,7 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);o
     background:'void', weight:1.4, glow:.65, turb:0, opacity:.84
   };
   const P = {...defaults};
-  let W=1,H=1,dpr=1,t=0,raf=0,last=performance.now(),fps=60,points=0;
+  let W=1,H=1,dpr=1,t=0,raf=0,drawRaf=0,last=performance.now(),fps=60,points=0;
   let xp = Number(localStorage.getItem('cf_mandala_xp_v2') || 0);
   let streak = Number(localStorage.getItem('cf_mandala_streak_v2') || 0);
   let combo=0, comboTimer=0, toastTimer=0, awardGate=0;
@@ -917,17 +917,29 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);o
     if(P.animate){t+=dt;stage.style.setProperty('--spin',(t*18)+'deg');draw();raf=requestAnimationFrame(loop);}else raf=0;
   }
   function setAnimate(on){
-    P.animate=on;$$('[data-toggle="animate"]').forEach(b=>b.classList.toggle('on',on));
+    P.animate=on;
+    $('[data-toggle="animate"]').forEach(b=>{
+      b.classList.toggle('on',on);
+      b.setAttribute('aria-checked',String(on));
+    });
     $('#playButton').textContent=on?'Ⅱ':'▶';$('#playButton').setAttribute('aria-label',on?'Pause animation':'Start animation');
+    if(on&&drawRaf){cancelAnimationFrame(drawRaf);drawRaf=0}
     if(on&&!raf){last=performance.now();raf=requestAnimationFrame(loop)}
     if(!on&&raf){cancelAnimationFrame(raf);raf=0;draw()}
   }
-  function schedule(){ if(!P.animate) draw(); }
+  function schedule(){
+    if(P.animate||drawRaf) return;
+    drawRaf=requestAnimationFrame(()=>{drawRaf=0;draw()});
+  }
   function rangePaint(el){const min=+el.min,max=+el.max,v=+el.value;el.style.setProperty('--pct',((v-min)/(max-min)*100)+'%')}
   function syncUI(){
     $('#symmetryBadge').textContent=P.symmetry;$('#symmetryStep').textContent=P.symmetry;$('#layersBadge').textContent=P.layers;$('#layersStep').textContent=P.layers;
     for(const el of $$('.range')){const key=el.dataset.key;el.value=P[key];rangePaint(el);const out=$('#'+el.id+'Out');if(out)out.textContent=fmt[key]?fmt[key](P[key]):P[key]}
-    $$('[data-toggle]').forEach(el=>el.classList.toggle('on',!!P[el.dataset.toggle]));
+    $('[data-toggle]').forEach(el=>{
+      const on=!!P[el.dataset.toggle];
+      el.classList.toggle('on',on);
+      el.setAttribute('aria-checked',String(on));
+    });
     $$('[data-pattern]').forEach(el=>el.classList.toggle('active',el.dataset.pattern===P.pattern));
     $$('[data-color-mode]').forEach(el=>el.classList.toggle('active',el.dataset.colorMode===P.colorMode));
     $$('[data-background]').forEach(el=>el.classList.toggle('active',el.dataset.background===P.background));
@@ -945,16 +957,38 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(34,211,216,.9);o
     P[key]=clamp(P[key]+delta,key==='symmetry'?2:1,key==='symmetry'?24:12);
     syncUI();vibrate(12);award(5);
   }));
-  $$('[data-toggle]').forEach(btn=>btn.addEventListener('click',()=>{
-    const key=btn.dataset.toggle;P[key]=!P[key];btn.classList.toggle('on',P[key]);
+  $('[data-toggle]').forEach(btn=>btn.addEventListener('click',()=>{
+    const key=btn.dataset.toggle;P[key]=!P[key];btn.classList.toggle('on',P[key]);btn.setAttribute('aria-checked',String(P[key]));
     if(key==='animate')setAnimate(P[key]);else schedule();vibrate(14);award(4);
   }));
   $$('[data-pattern]').forEach(btn=>btn.addEventListener('click',()=>{
     P.pattern=btn.dataset.pattern;$$('[data-pattern]').forEach(x=>x.classList.toggle('active',x===btn));draw();vibrate(16);award(12);showToast(btn.querySelector('strong').textContent+' selected','The viewport has reconfigured','◉');
   }));
-  $$('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{
-    $$('[data-tab]').forEach(x=>x.classList.toggle('active',x===btn));$$('[data-panel]').forEach(x=>x.classList.toggle('active',x.dataset.panel===btn.dataset.tab));vibrate(7);
-  }));
+  const tabs=$('[data-tab]');
+  function activateTab(tab,{focus=false}={}){
+    tabs.forEach(item=>{
+      const selected=item===tab;
+      item.classList.toggle('active',selected);
+      item.setAttribute('aria-selected',String(selected));
+      item.tabIndex=selected?0:-1;
+      const panel=document.getElementById(item.getAttribute('aria-controls'));
+      if(panel){panel.classList.toggle('active',selected);panel.hidden=!selected}
+    });
+    if(focus)tab.focus();
+  }
+  tabs.forEach((btn,index)=>{
+    btn.addEventListener('click',()=>{activateTab(btn);vibrate(7)});
+    btn.addEventListener('keydown',event=>{
+      let next=index;
+      if(event.key==='ArrowRight')next=(index+1)%tabs.length;
+      else if(event.key==='ArrowLeft')next=(index-1+tabs.length)%tabs.length;
+      else if(event.key==='Home')next=0;
+      else if(event.key==='End')next=tabs.length-1;
+      else return;
+      event.preventDefault();
+      activateTab(tabs[next],{focus:true});
+    });
+  });
   $$('[data-color-mode]').forEach(btn=>btn.addEventListener('click',()=>{P.colorMode=btn.dataset.colorMode;$$('[data-color-mode]').forEach(x=>x.classList.toggle('active',x===btn));schedule();vibrate(10);award(4)}));
   $$('[data-background]').forEach(btn=>btn.addEventListener('click',()=>{P.background=btn.dataset.background;$$('[data-background]').forEach(x=>x.classList.toggle('active',x===btn));schedule();vibrate(10);award(4)}));
   $$('[data-color]').forEach(btn=>btn.addEventListener('click',()=>{P.color=btn.dataset.color;$$('[data-color]').forEach(x=>x.classList.toggle('active',x===btn));schedule();vibrate(12);award(5)}));
