@@ -1,0 +1,40 @@
+name: Repair Mandala Selector Regression
+
+on:
+  push:
+    branches:
+      - fix/mandala-v2-review-comments
+    paths:
+      - .github/workflows/repair-mandala-selector-regression.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/mandala-v2-review-comments
+          fetch-depth: 0
+
+      - name: Repair collection selectors
+        run: node .github/scripts/repair-mandala-selector-regression.mjs
+
+      - name: Validate repaired diff
+        run: |
+          git diff --check
+          grep -Fq '$$(\x27[data-toggle="animate"]\x27).forEach' public/mandala-v2.html || grep -Fq '$$(\x27[data-toggle="animate"]\x27)' public/mandala-v2.html
+          grep -Fq 'const tabs=$$(' public/mandala-v2.html
+
+      - name: Commit repaired HTML and remove helpers
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/mandala-v2.html
+          git rm .github/scripts/repair-mandala-selector-regression.mjs
+          git rm .github/workflows/repair-mandala-selector-regression.yml
+          git commit -m "fix: preserve collection selectors in mandala controls"
+          git push origin HEAD:fix/mandala-v2-review-comments
