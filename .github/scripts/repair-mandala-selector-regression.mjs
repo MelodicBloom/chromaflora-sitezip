@@ -43,14 +43,14 @@ for (const needle of expected) {
   if (!source.includes(needle)) throw new Error(`Missing repaired selector: ${needle}`);
 }
 
-const forbidden = [
-  `$('[data-toggle="animate"]').forEach`,
-  `$('[data-toggle]').forEach(el=>`,
-  `$('[data-toggle]').forEach(btn=>`,
-  `const tabs=$('[data-tab]');`,
+const forbiddenPatterns = [
+  /^\s{4}\$\('\[data-toggle="animate"\]'\)\.forEach/m,
+  /^\s{4}\$\('\[data-toggle\]'\)\.forEach\(el=>/m,
+  /^\s{2}\$\('\[data-toggle\]'\)\.forEach\(btn=>/m,
+  /^\s{2}const tabs=\$\('\[data-tab\]'\);/m,
 ];
-for (const needle of forbidden) {
-  if (source.includes(needle)) throw new Error(`Single-element selector still used as a collection: ${needle}`);
+for (const pattern of forbiddenPatterns) {
+  if (pattern.test(source)) throw new Error(`Single-element selector still used as a collection: ${pattern}`);
 }
 
 const scriptMatch = source.match(/<script>\s*([\s\S]*?)\s*<\/script>/);
